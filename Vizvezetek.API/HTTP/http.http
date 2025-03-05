@@ -1,0 +1,4 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+@baseurl = http://localhost:5000/api
+
+GET {{baseurl}}/Munkalapok/4
