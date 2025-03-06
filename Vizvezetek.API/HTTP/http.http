@@ -1,4 +1,22 @@
 # For more info on HTTP files go to https://aka.ms/vs/httpfile
 @baseurl = http://localhost:5000/api
 
+GET {{baseurl}}/Munkalapok
+
+###
+
 GET {{baseurl}}/Munkalapok/4
+
+###
+
+### Test MunkalapKereses
+POST {{baseurl}}/Munkalapok/Kereses
+Content-Type: application/json
+{
+  "HelyszinId": 163,
+  "SzereloId": 5
+}
+
+###
+
+GET {{baseurl}}/Munkalapok/ev/2002

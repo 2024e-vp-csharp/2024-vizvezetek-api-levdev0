@@ -21,14 +21,39 @@ namespace Vizvezetek.API.Controllers
 
         // GET: api/Munkalapok
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MunkalapDTO>>> GetMunkalap()
+        [Route("")]
+        [Route("ev/{ev:int?}")]
+        public async Task<ActionResult<IEnumerable<MunkalapDTO>>> GetMunkalap(int? ev = null)
         {
-            var result = await _context.munkalap.Include(m => m.hely).Include(m => m.szerelo)
-                .Select(m => new MunkalapDTO(m.id, m.beadas_datum, m.javitas_datum, m.hely.telepules, m.hely.utca, m.szerelo.nev, m.munkaora, m.anyagar))
+            var query = _context.munkalap
+                .Include(m => m.hely)
+                .Include(m => m.szerelo).AsQueryable();
+
+            if (ev.HasValue && ev.Value > 0)
+            {
+                query = query.Where(m => m.javitas_datum.Year == ev.Value);
+            }
+
+            var result = await query
+                .Select(m => new MunkalapDTO(
+                    m.id,
+                    m.beadas_datum,
+                    m.javitas_datum,
+                    m.hely.telepules,
+                    m.hely.utca,
+                    m.szerelo.nev,
+                    m.munkaora,
+                    m.anyagar))
                 .ToListAsync();
 
-            return result;
+            if (!result.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
         }
+
 
         // GET: api/Munkalapok/5
         [HttpGet("{id}")]
@@ -47,10 +72,41 @@ namespace Vizvezetek.API.Controllers
             return munkalap;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<MunkalapKeresesDTO>> SearchMunkalap(int helyszinId, int szereloId)
+        // POST: api/Munkalapok/Kereses
+        [HttpPost("Kereses")]
+        public async Task<ActionResult<IEnumerable<MunkalapDTO>>> SearchMunkalap(MunkalapKeresesDTO munkalapKeresesDTO)
         {
-            return NotFound();
+            var result = await _context.munkalap
+                .Include(m => m.hely)
+                .Include(m => m.szerelo)
+                .Where(m => m.hely_id == munkalapKeresesDTO.HelyszinId &&
+                            m.szerelo_id == munkalapKeresesDTO.SzereloId)
+                .ToListAsync();
+
+            var selectResult = result.Select(m => new MunkalapDTO(m.id, m.beadas_datum, m.javitas_datum, m.hely.telepules, m.hely.utca, m.szerelo.nev, m.munkaora, m.anyagar));
+
+            if (selectResult == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(selectResult);
         }
+
+        //[HttpGet("ev/{ev}")]
+        //public async Task<ActionResult<IEnumerable<MunkalapDTO>>> GetEvszam(int ev)
+        //{
+        //    var result = await _context.munkalap.Include(m => m.hely).Include(m => m.szerelo)
+        //        .Where(m => m.javitas_datum.Year == ev)
+        //        .Select(m => new MunkalapDTO(m.id, m.beadas_datum, m.javitas_datum, m.hely.telepules, m.hely.utca, m.szerelo.nev, m.munkaora, m.anyagar))
+        //        .ToListAsync();
+
+        //    if (result == null)
+        //    {
+        //        NotFound();
+        //    }
+
+        //    return Ok(result);
+        //}
     }
 }
