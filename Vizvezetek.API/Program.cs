@@ -1,3 +1,8 @@
+using Vizvezetek.API.Context;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+
 namespace Vizvezetek.API
 {
     public class Program
@@ -7,8 +12,16 @@ namespace Vizvezetek.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
 
-            builder.Services.AddControllers();
+            var connectionString = builder.Configuration.GetConnectionString("Default");
+
+            builder.Services.AddDbContext<vizvezetekContext>(options =>
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
 
             var app = builder.Build();
 
